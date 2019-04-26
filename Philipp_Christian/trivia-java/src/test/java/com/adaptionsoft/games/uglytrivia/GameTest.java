@@ -2,6 +2,17 @@ package com.adaptionsoft.games.uglytrivia;
 
 import org.junit.Test;
 
+import java.io.IOException;
+import java.net.URISyntaxException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Objects;
+import java.util.function.Consumer;
+import java.util.stream.Collectors;
+
 import static org.junit.Assert.*;
 
 public class GameTest {
@@ -244,8 +255,9 @@ public class GameTest {
 
     @Test
     public void testPopQuestion() {
+        TestConsumer outputConsumer = new TestConsumer();
 
-        Game game = new Game();
+        Game game = new Game(outputConsumer);
         Player jay = game.add("Jay");
         Player unit = game.add("Unit");
 
@@ -258,5 +270,38 @@ public class GameTest {
 
         assertEquals(49, game.popQuestions.size());
         assertEquals("Pop Question 1", game.popQuestions.get(0));
+
+        List<String> output = outputConsumer.getOutput();
+        assertEquals(9, output.size());
+        String actualOutput = String.join("\n", output);
+        String expectedOutput = loadExpected("expected-out-pop-question.txt");
+        assertEquals(expectedOutput, actualOutput);
     }
+
+    private String loadExpected(String fileName) {
+        try {
+            return Files.readString(Path.of(Objects.requireNonNull(getClass().getClassLoader().getResource(fileName)).toURI()));
+        } catch (IOException | URISyntaxException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private class TestConsumer implements Consumer<String> {
+
+        private final List<String> output = new ArrayList<>();
+        private void addOutput(String output) {
+            this.output.add(output);
+        }
+
+        List<String> getOutput() {
+            return Collections.unmodifiableList(output);
+        }
+
+        @Override
+        public void accept(String s) {
+            System.out.println(s);
+            this.addOutput(s);
+        }
+    }
+
 }
