@@ -1,5 +1,6 @@
 
-package com.adaptionsoft.games.trivia.runner;
+package com.adaptionsoft.games.runner;
+import java.util.ArrayList;
 import java.util.Random;
 
 import com.adaptionsoft.games.uglytrivia.Game;
@@ -31,6 +32,6 @@ public class GameRunner {
 			
 			
 		} while (notAWinner);
-		
+
 	}
 }
