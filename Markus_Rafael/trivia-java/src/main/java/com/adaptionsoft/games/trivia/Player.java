@@ -17,7 +17,15 @@ public class Player {
         this.purse = purse;
     }
 
+    public int getPlace() {
+        return place;
+    }
+
+    public void setPlace(int place) {
+        this.place = place;
+    }
+
     private String name;
     private int purse;
-
+    private int place;
 }
