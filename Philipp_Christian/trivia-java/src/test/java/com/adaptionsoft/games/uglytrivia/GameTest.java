@@ -183,6 +183,56 @@ public class GameTest {
     }
 
     @Test
+    public void testGetNoCoinWhenInPenaltyBoxAndAnswerCorrect() {
+        Game game = new Game();
+        game.add("Jay");
+        game.add("Unit");
+
+        assertEquals(0, game.currentPlayer);
+        assertEquals(0, game.places[0]);
+
+        game.roll(1);
+        //after the roll, the current user should be at position 1
+        assertEquals(1, game.places[0]);
+
+        //he answers incorrectly!
+        game.wrongAnswer();
+
+        //and gets no golden coin!
+        assertEquals(0, game.purses[0]);
+
+        //and he is sent to penalty box
+        assertTrue(game.inPenaltyBox[0]);
+
+        //it's the next player's turn!
+        assertEquals(1, game.currentPlayer);
+
+        //the second player rolls a 2
+        game.roll(2);
+        assertEquals(2, game.places[1]);
+        //he answers correctly!
+        game.wasCorrectlyAnswered();
+        //and gets no golden coin!
+        assertEquals(1, game.purses[1]);
+
+        //it's the first player's turn!
+        assertEquals(0, game.currentPlayer);
+        assertTrue(game.inPenaltyBox[0]);
+
+        //the first player rolls a 2
+        game.roll(2);
+
+        assertFalse(game.isGettingOutOfPenaltyBox);
+
+        //now, Jay answers correctly
+        game.wasCorrectlyAnswered();
+
+        //however, Jay remains in the penalty box (potential bug?)
+        assertTrue(game.inPenaltyBox[0]);
+        assertEquals(0, game.purses[0]);
+    }
+
+    @Test
     public void testCorrectAnswerNotGettingInPenaltyBox() {
 
     }
@@ -193,7 +243,20 @@ public class GameTest {
     }
 
     @Test
-    public void testCategories() {
+    public void testPopQuestion() {
 
+        Game game = new Game();
+        game.add("Jay");
+        game.add("Unit");
+
+        assertEquals(0, game.currentPlayer);
+        assertEquals(0, game.places[0]);
+
+        game.roll(4);
+        //after the roll, the current user should be a position 3
+        assertEquals(4, game.places[0]);
+
+        assertEquals(49, game.popQuestions.size());
+        assertEquals("Pop Question 1", game.popQuestions.get(0));
     }
 }
