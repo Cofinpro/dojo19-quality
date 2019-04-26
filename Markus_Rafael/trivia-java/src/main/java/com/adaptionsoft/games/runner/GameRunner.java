@@ -18,7 +18,10 @@ public class GameRunner {
 		aGame.add("Sue");
 		
 		Random rand = new Random();
-	
+		if(args != null && args.length > 0 && args[0] != null) {
+			rand.setSeed(Integer.valueOf(args[0]));
+		}
+
 		do {
 			
 			aGame.roll(rand.nextInt(5) + 1);

@@ -1,7 +1,5 @@
 package com.adaptionsoft.games.uglytrivia.category;
 
-import com.adaptionsoft.games.uglytrivia.Question;
-
 public class Category {
 	
 	private String name;
