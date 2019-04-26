@@ -3,7 +3,6 @@ package com.adaptionsoft.games.uglytrivia;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.LinkedList;
 import java.util.Map;
 import java.util.function.Consumer;
 
@@ -15,18 +14,12 @@ public class Game {
 	private static final String SCIENCE = "Science";
 	private static final String POP = "Pop";
 
-	ArrayList players = new ArrayList();
-	
-	final ArrayList<Player> playerss = new ArrayList<>();
-	
-	final Collection<Player> playersInPenalty = new ArrayList<>();
-	
-	
-	
-	int[] places = new int[6];
-	int[] purses = new int[6];
-	boolean[] inPenaltyBox = new boolean[6];
+	final ArrayList<Player> players = new ArrayList<>();
 
+	final Collection<Player> playersInPenalty = new ArrayList<>();
+
+	int[] places = new int[6];
+	boolean[] inPenaltyBox = new boolean[6];
 
 	private final Collection<Category> categories = new ArrayList<>();
 
@@ -37,19 +30,25 @@ public class Game {
 
 	Consumer<String> outConsumer;
 
+	private GameRandomGenerator gameRandomGenerator = new DefaultGameRandomGenerator();
+
 	public Game() {
 		categories.add(new Category(POP));
 		categories.add(new Category(SCIENCE));
 		categories.add(new Category(SPORTS));
 		categories.add(new Category(ROCK));
-
 		initFields();
 
 	}
 
 	public Game(Consumer<String> outConsumer) {
+		this(outConsumer, new DefaultGameRandomGenerator());
+	}
+
+	public Game(Consumer<String> outConsumer, GameRandomGenerator gameRandomGenerator) {
 		this();
 		this.outConsumer = outConsumer;
+		this.gameRandomGenerator = gameRandomGenerator;
 	}
 
 	private void initFields() {
@@ -77,10 +76,14 @@ public class Game {
 
 	public boolean add(String playerName) {
 
+		final Player player = new Player();
+		player.setName(playerName);
+		players.add(player);
+
 		// TODO Player instanziieren
-		players.add(playerName);
+
 		places[howManyPlayers()] = 0;
-		purses[howManyPlayers()] = 0;
+	
 		inPenaltyBox[howManyPlayers()] = false;
 
 		out(playerName + " was added");
@@ -93,7 +96,7 @@ public class Game {
 	}
 
 	public void roll(int roll) {
-		out(players.get(currentPlayer) + " is the current player");
+		out(getCurrentPlayerName() + " is the current player");
 		out("They have rolled a " + roll);
 
 		if (isPlayerInPenalty()) {
@@ -104,12 +107,16 @@ public class Game {
 
 	}
 
+	private String getCurrentPlayerName() {
+		return getCurrentPlayer().getName();
+	}
+
 	private void rollPlayerMoveForward(int roll) {
 		places[currentPlayer] = places[currentPlayer] + roll;
 		if (places[currentPlayer] > 11)
 			places[currentPlayer] = places[currentPlayer] - 12;
 
-		out(players.get(currentPlayer) + "'s new location is " + places[currentPlayer]);
+		out(getCurrentPlayerName() + "'s new location is " + places[currentPlayer]);
 		out("The category is " + currentCategory());
 		askQuestion();
 	}
@@ -118,10 +125,10 @@ public class Game {
 		if (isReleasedFromPenalty(roll)) {
 			isGettingOutOfPenaltyBox = true;
 
-			out(players.get(currentPlayer) + " is getting out of the penalty box");
+			out(getCurrentPlayerName() + " is getting out of the penalty box");
 			rollPlayerMoveForward(roll);
 		} else {
-			out(players.get(currentPlayer) + " is not getting out of the penalty box");
+			out(getCurrentPlayerName() + " is not getting out of the penalty box");
 			isGettingOutOfPenaltyBox = false;
 		}
 	}
@@ -157,10 +164,18 @@ public class Game {
 		}
 	}
 
+	private Player getCurrentPlayer() {
+		return players.get(currentPlayer);
+	}
+
 	private boolean wasCorrectlyAnsweredDefault() {
 		out("Answer was corrent!!!!");
-		purses[currentPlayer]++;
-		out(players.get(currentPlayer) + " now has " + purses[currentPlayer] + " Gold Coins.");
+		final Player currPlayer = getCurrentPlayer();
+		currPlayer.addCoins(1);
+
+		
+
+		out(getCurrentPlayerName() + " now has " + currPlayer.getCoins() + " Gold Coins.");
 
 		boolean winner = didPlayerWin();
 		currentPlayer++;
@@ -173,8 +188,10 @@ public class Game {
 	private boolean wasCorrectlyAnsweredInPenalty() {
 		if (isGettingOutOfPenaltyBox) {
 			out("Answer was correct!!!!");
-			purses[currentPlayer]++;
-			out(players.get(currentPlayer) + " now has " + purses[currentPlayer] + " Gold Coins.");
+			final Player currPlayer = getCurrentPlayer();
+			currPlayer.addCoins(1);
+			
+			out(getCurrentPlayerName() + " now has " + currPlayer.getCoins() + " Gold Coins.");
 
 			boolean winner = didPlayerWin();
 			currentPlayer++;
@@ -189,7 +206,7 @@ public class Game {
 
 	public boolean wrongAnswer() {
 		out("Question was incorrectly answered");
-		out(players.get(currentPlayer) + " was sent to the penalty box");
+		out(getCurrentPlayerName() + " was sent to the penalty box");
 		inPenaltyBox[currentPlayer] = true;
 
 		return setNextPlayer();
@@ -203,7 +220,7 @@ public class Game {
 	}
 
 	private boolean didPlayerWin() {
-		return !(purses[currentPlayer] == 6);
+		return !(getCurrentPlayer().getCoins() == 6);
 	}
 
 	private void out(Object o) {
@@ -215,6 +232,18 @@ public class Game {
 		System.out.println(o);
 	}
 
-	
+	public void run() {
+		boolean notAWinner = true;
+		do {
+			roll(gameRandomGenerator.randomStepsize() + 1);
+
+			if (gameRandomGenerator.randomAnswer() == 7) {
+				notAWinner = wrongAnswer();
+			} else {
+				notAWinner = wasCorrectlyAnswered();
+			}
+
+		} while (notAWinner);
+	}
 
 }

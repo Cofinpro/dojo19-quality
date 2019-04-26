@@ -9,6 +9,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import com.adaptionsoft.games.uglytrivia.Game;
+import com.adaptionsoft.games.uglytrivia.GameRandomGenerator;
 
 import junit.framework.Assert;
 
@@ -61,14 +62,7 @@ public class GoldenMasterTest {
 
 		final StringBuilder sb = new StringBuilder();
 		
-		final Game aGame = new Game(new Consumer<String>() {
-			
-			@Override
-			public void accept(String t) {
-				sb.append(t);
-				
-			}
-		});
+		final Game aGame = new Game(stringBuilderConsumer(sb));
 
 		aGame.add("Chet");
 		aGame.add("Pat");
@@ -92,6 +86,40 @@ public class GoldenMasterTest {
 		String current = sb.toString();
 				
 		Assert.assertEquals(expected, current);
+	}
+
+	private Consumer<String> stringBuilderConsumer(final StringBuilder sb) {
+		return new Consumer<String>() {
+			
+			@Override
+			public void accept(String t) {
+				sb.append(t);
+				
+			}
+		};
+	}
+	
+	@Test
+	public void test3() {
+		StringBuilder sb = new StringBuilder();
+		Consumer<String> outConsumer = stringBuilderConsumer(sb);
+		GameRandomGenerator gameRandomGenerator = new PredictableGameRandomGenerator();
+		
+		
+		Game aGame = new Game(outConsumer, gameRandomGenerator);
+		
+		aGame.add("Chet");
+		aGame.add("Pat");
+		aGame.add("Sue");
+		
+		aGame.run();
+		
+		String expected = readFromResourcesFile("golden-master-expected.txt");
+		String current = sb.toString();
+				
+		Assert.assertEquals(expected, current);
+		
+		
 	}
 	
 	private String readFromResourcesFile(String filename) {

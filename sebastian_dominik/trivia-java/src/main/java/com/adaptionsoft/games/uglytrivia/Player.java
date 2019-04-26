@@ -21,5 +21,9 @@ public class Player {
 	public void setCoins(int coins) {
 		this.coins = coins;
 	}
+	
+	public void addCoins(int amount) {
+		coins += amount;
+	}
 
 }
