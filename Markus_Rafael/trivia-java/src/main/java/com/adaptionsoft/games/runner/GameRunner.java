@@ -19,8 +19,7 @@ public class GameRunner {
 		
 		Random rand = new Random();
 		if(args != null && args.length > 0 && args[0] != null) {
-			int seed = Integer.valueOf(args[0]);
-			rand.setSeed(seed);
+			rand.setSeed(Integer.valueOf(args[0]));
 		}
 
 		do {
