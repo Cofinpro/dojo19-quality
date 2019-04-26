@@ -9,26 +9,26 @@ import java.util.function.Consumer;
 import com.adaptionsoft.games.uglytrivia.category.Category;
 
 public class Game {
+	private static final int BOARD_SIZE = 12;
 	private static final String ROCK = "Rock";
 	private static final String SPORTS = "Sports";
 	private static final String SCIENCE = "Science";
 	private static final String POP = "Pop";
 
-	final ArrayList<Player> players = new ArrayList<>();
+	private final ArrayList<Player> players = new ArrayList<>();
 
-	final Collection<Player> playersInPenalty = new ArrayList<>();
-
-	int[] places = new int[6];
-	boolean[] inPenaltyBox = new boolean[6];
+	private final Collection<Player> playersInPenalty = new ArrayList<>();
+	private final Map<Player,Integer> playerPlaces = new HashMap<>();
 
 	private final Collection<Category> categories = new ArrayList<>();
 
 	private final Map<Integer, String> fields = new HashMap<>();
 
 	int currentPlayer = 0;
+	
 	boolean isGettingOutOfPenaltyBox;
 
-	Consumer<String> outConsumer;
+	private Consumer<String> outConsumer;
 
 	private GameRandomGenerator gameRandomGenerator = new DefaultGameRandomGenerator();
 
@@ -82,9 +82,8 @@ public class Game {
 
 		// TODO Player instanziieren
 
-		places[howManyPlayers()] = 0;
-	
-		inPenaltyBox[howManyPlayers()] = false;
+		//places[howManyPlayers()] = 0;
+		playerPlaces.put(player, 0);	
 
 		out(playerName + " was added");
 		out("They are player number " + players.size());
@@ -112,11 +111,13 @@ public class Game {
 	}
 
 	private void rollPlayerMoveForward(int roll) {
-		places[currentPlayer] = places[currentPlayer] + roll;
-		if (places[currentPlayer] > 11)
-			places[currentPlayer] = places[currentPlayer] - 12;
-
-		out(getCurrentPlayerName() + "'s new location is " + places[currentPlayer]);
+		
+		final Player currPlayer = getCurrentPlayer();
+		final int currentPlace = playerPlaces.get(currPlayer);
+		final int newPlace = (currentPlace + roll) % BOARD_SIZE;
+		playerPlaces.put(currPlayer, newPlace);
+		
+		out(currPlayer.getName() + "'s new location is " + newPlace);
 		out("The category is " + currentCategory());
 		askQuestion();
 	}
@@ -134,7 +135,7 @@ public class Game {
 	}
 
 	private boolean isPlayerInPenalty() {
-		return inPenaltyBox[currentPlayer];
+		return playersInPenalty.contains(getCurrentPlayer());
 	}
 
 	private boolean isReleasedFromPenalty(int roll) {
@@ -152,7 +153,7 @@ public class Game {
 	}
 
 	private String currentCategory() {
-		return fields.get(places[currentPlayer]);
+		return fields.get(playerPlaces.get(getCurrentPlayer()));
 	}
 
 	public boolean wasCorrectlyAnswered() {
@@ -207,7 +208,7 @@ public class Game {
 	public boolean wrongAnswer() {
 		out("Question was incorrectly answered");
 		out(getCurrentPlayerName() + " was sent to the penalty box");
-		inPenaltyBox[currentPlayer] = true;
+		playersInPenalty.add(getCurrentPlayer());
 
 		return setNextPlayer();
 	}
@@ -233,6 +234,9 @@ public class Game {
 	}
 
 	public void run() {
+		if(!isPlayable()) {
+			throw new RuntimeException("Game not playable");
+		}
 		boolean notAWinner = true;
 		do {
 			roll(gameRandomGenerator.randomStepsize() + 1);
