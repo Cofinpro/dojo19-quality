@@ -6,10 +6,7 @@ import java.io.IOException;
 import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
@@ -32,10 +29,16 @@ public class GameTest {
 
         assertEquals(0, game.currentPlayer);
 
-        assertEquals(50, game.popQuestions.size());
-        assertEquals(50, game.rockQuestions.size());
-        assertEquals(50, game.scienceQuestions.size());
-        assertEquals(50, game.sportsQuestions.size());
+        Map<QuestionCategory, LinkedList<Question>> questions = game.getQuestions();
+        LinkedList<Question> popQuestions = questions.get(QuestionCategory.POP);
+        LinkedList<Question> rockQuestions = questions.get(QuestionCategory.ROCK);
+        LinkedList<Question> scienceQuestions = questions.get(QuestionCategory.SCIENCE);
+        LinkedList<Question> sportsQuestions = questions.get(QuestionCategory.SPORTS);
+
+        assertEquals(50, popQuestions.size());
+        assertEquals(50, rockQuestions.size());
+        assertEquals(50, scienceQuestions.size());
+        assertEquals(50, sportsQuestions.size());
     }
 
     @Test
@@ -268,8 +271,11 @@ public class GameTest {
         //after the roll, the current user should be a position 3
         assertEquals(4, jay.getPosition());
 
-        assertEquals(49, game.popQuestions.size());
-        assertEquals("Pop Question 1", game.popQuestions.get(0));
+        Map<QuestionCategory, LinkedList<Question>> questions = game.getQuestions();
+
+        LinkedList<Question> popQuestions = questions.get(QuestionCategory.POP);
+        assertEquals(49, popQuestions.size());
+        assertEquals("Pop Question 1", popQuestions.get(0).getText());
 
         List<String> output = outputConsumer.getOutput();
         assertEquals(9, output.size());
