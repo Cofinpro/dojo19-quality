@@ -1,22 +1,36 @@
 package com.adaptionsoft.games.uglytrivia;
 
+import org.junit.Before;
 import org.junit.Test;
+import org.mockito.Mockito;
 
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Objects;
 import java.util.function.Consumer;
-import java.util.stream.Collectors;
 
 import static org.junit.Assert.*;
 
 public class GameTest {
 
+    private QuestionRepository questionRepository = Mockito.spy(QuestionRepository.class);
+    private TestConsumer outputConsumer = new TestConsumer();;
+    private Game game;
+
+    @Before
+    public void setup() {
+        outputConsumer.clear();
+        game = new Game(outputConsumer, questionRepository);
+    }
+
     @Test
     public void howManyPlayers() {
-        Game game = new Game();
+
         game.add("JayUnit");
 
         int players = game.howManyPlayers();
@@ -25,26 +39,12 @@ public class GameTest {
 
     @Test
     public void testInitialSetup() {
-        Game game = new Game();
-
         assertEquals(0, game.currentPlayer);
-
-        Map<QuestionCategory, LinkedList<Question>> questions = game.getQuestions();
-        LinkedList<Question> popQuestions = questions.get(QuestionCategory.POP);
-        LinkedList<Question> rockQuestions = questions.get(QuestionCategory.ROCK);
-        LinkedList<Question> scienceQuestions = questions.get(QuestionCategory.SCIENCE);
-        LinkedList<Question> sportsQuestions = questions.get(QuestionCategory.SPORTS);
-
-        assertEquals(50, popQuestions.size());
-        assertEquals(50, rockQuestions.size());
-        assertEquals(50, scienceQuestions.size());
-        assertEquals(50, sportsQuestions.size());
     }
 
     @Test
     public void testRollCorrectAnswer() {
 
-        Game game = new Game();
         Player jay = game.add("Jay");
         Player unit = game.add("Unit");
 
@@ -70,7 +70,6 @@ public class GameTest {
     @Test
     public void testRollBadAnswer() {
 
-        Game game = new Game();
         Player jay = game.add("Jay");
         Player unit = game.add("Unit");
 
@@ -97,7 +96,6 @@ public class GameTest {
     @Test
     public void testGetOutOfPenaltyBox() {
 
-        Game game = new Game();
         Player jay = game.add("Jay");
         Player unit = game.add("Unit");
 
@@ -148,7 +146,7 @@ public class GameTest {
 
     @Test
     public void testNotGettingOutOfPenaltyBox() {
-        Game game = new Game();
+
         Player jay = game.add("Jay");
         Player unit = game.add("Unit");
 
@@ -198,7 +196,7 @@ public class GameTest {
 
     @Test
     public void testGetNoCoinWhenInPenaltyBoxAndAnswerCorrect() {
-        Game game = new Game();
+
         Player jay = game.add("Jay");
         Player unit = game.add("Unit");
 
@@ -258,9 +256,7 @@ public class GameTest {
 
     @Test
     public void testPopQuestion() {
-        TestConsumer outputConsumer = new TestConsumer();
 
-        Game game = new Game(outputConsumer);
         Player jay = game.add("Jay");
         Player unit = game.add("Unit");
 
@@ -271,11 +267,7 @@ public class GameTest {
         //after the roll, the current user should be a position 3
         assertEquals(4, jay.getPosition());
 
-        Map<QuestionCategory, LinkedList<Question>> questions = game.getQuestions();
-
-        LinkedList<Question> popQuestions = questions.get(QuestionCategory.POP);
-        assertEquals(49, popQuestions.size());
-        assertEquals("Pop Question 1", popQuestions.get(0).getText());
+        Mockito.verify(questionRepository, Mockito.times(1)).retrieveQuestion(QuestionCategory.POP);
 
         List<String> output = outputConsumer.getOutput();
         assertEquals(9, output.size());
@@ -297,6 +289,10 @@ public class GameTest {
         private final List<String> output = new ArrayList<>();
         private void addOutput(String output) {
             this.output.add(output);
+        }
+
+        void clear() {
+            this.output.clear();
         }
 
         List<String> getOutput() {

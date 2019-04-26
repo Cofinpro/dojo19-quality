@@ -1,6 +1,7 @@
 package com.adaptionsoft.games.uglytrivia;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.function.Consumer;
 
 import static com.adaptionsoft.games.uglytrivia.QuestionCategory.*;
@@ -8,28 +9,15 @@ import static com.adaptionsoft.games.uglytrivia.QuestionCategory.*;
 public class Game {
     private List<Player> players = new ArrayList<>();
 
-    private Map<QuestionCategory, LinkedList<Question>> questions = new EnumMap<>(QuestionCategory.class);
-
     int currentPlayer = 0;
     boolean isGettingOutOfPenaltyBox;
 
     private final Consumer<String> outputConsumer;
+    private final QuestionRepository questionRepository;
 
-    Game(Consumer<String> outputConsumer) {
+    public Game(Consumer<String> outputConsumer, QuestionRepository questionRepository) {
         this.outputConsumer = outputConsumer;
-        for (QuestionCategory category : values()) {
-            questions.computeIfAbsent(category, c -> {
-                LinkedList<Question> questionList = new LinkedList<>();
-                for (int i = 0; i < 50; i++) {
-                    questionList.add(c.createQuestion(i));
-                }
-                return questionList;
-            });
-        }
-    }
-
-    public Game() {
-        this(System.out::println);
+        this.questionRepository = questionRepository;
     }
 
     public boolean isPlayable() {
@@ -90,8 +78,8 @@ public class Game {
 
     private void askQuestion() {
         QuestionCategory questionCategory = currentCategory();
-        LinkedList<Question> questionList = questions.get(questionCategory);
-        println(questionList.removeFirst());
+        Question question = questionRepository.retrieveQuestion(questionCategory);
+        println(question);
     }
 
 
@@ -176,7 +164,4 @@ public class Game {
         outputConsumer.accept(line);
     }
 
-    public Map<QuestionCategory, LinkedList<Question>> getQuestions() {
-        return questions;
-    }
 }
