@@ -1,17 +1,14 @@
 package com.adaptionsoft.games.uglytrivia;
 
-import java.util.ArrayList;
-import java.util.LinkedList;
-import java.util.List;
+import java.util.*;
 import java.util.function.Consumer;
+
+import static com.adaptionsoft.games.uglytrivia.QuestionCategory.*;
 
 public class Game {
     private List<Player> players = new ArrayList<>();
 
-    LinkedList popQuestions = new LinkedList();
-    LinkedList scienceQuestions = new LinkedList();
-    LinkedList sportsQuestions = new LinkedList();
-    LinkedList rockQuestions = new LinkedList();
+    private Map<QuestionCategory, LinkedList<Question>> questions = new EnumMap<>(QuestionCategory.class);
 
     int currentPlayer = 0;
     boolean isGettingOutOfPenaltyBox;
@@ -20,20 +17,19 @@ public class Game {
 
     Game(Consumer<String> outputConsumer) {
         this.outputConsumer = outputConsumer;
-        for (int i = 0; i < 50; i++) {
-            popQuestions.addLast("Pop Question " + i);
-            scienceQuestions.addLast(("Science Question " + i));
-            sportsQuestions.addLast(("Sports Question " + i));
-            rockQuestions.addLast(createRockQuestion(i));
+        for (QuestionCategory category : values()) {
+            questions.computeIfAbsent(category, c -> {
+                LinkedList<Question> questionList = new LinkedList<>();
+                for (int i = 0; i < 50; i++) {
+                    questionList.add(c.createQuestion(i));
+                }
+                return questionList;
+            });
         }
     }
 
     public Game() {
         this(System.out::println);
-    }
-
-    public String createRockQuestion(int index) {
-        return "Rock Question " + index;
     }
 
     public boolean isPlayable() {
@@ -93,30 +89,25 @@ public class Game {
     }
 
     private void askQuestion() {
-        if (currentCategory() == "Pop")
-            println(popQuestions.removeFirst());
-        if (currentCategory() == "Science")
-            println(scienceQuestions.removeFirst());
-        if (currentCategory() == "Sports")
-            println(sportsQuestions.removeFirst());
-        if (currentCategory() == "Rock")
-            println(rockQuestions.removeFirst());
+        QuestionCategory questionCategory = currentCategory();
+        LinkedList<Question> questionList = questions.get(questionCategory);
+        println(questionList.removeFirst());
     }
 
 
-    private String currentCategory() {
+    private QuestionCategory currentCategory() {
         Player player = players.get(currentPlayer);
         int pos = player.getPosition();
-        if (pos == 0) return "Pop";
-        if (pos == 4) return "Pop";
-        if (pos == 8) return "Pop";
-        if (pos == 1) return "Science";
-        if (pos == 5) return "Science";
-        if (pos == 9) return "Science";
-        if (pos == 2) return "Sports";
-        if (pos == 6) return "Sports";
-        if (pos == 10) return "Sports";
-        return "Rock";
+        if (pos == 0) return POP;
+        if (pos == 4) return POP;
+        if (pos == 8) return POP;
+        if (pos == 1) return SCIENCE;
+        if (pos == 5) return SCIENCE;
+        if (pos == 9) return SCIENCE;
+        if (pos == 2) return SPORTS;
+        if (pos == 6) return SPORTS;
+        if (pos == 10) return SPORTS;
+        return ROCK;
     }
 
     public boolean wasCorrectlyAnswered() {
@@ -183,5 +174,9 @@ public class Game {
 
     private void println(String line) {
         outputConsumer.accept(line);
+    }
+
+    public Map<QuestionCategory, LinkedList<Question>> getQuestions() {
+        return questions;
     }
 }
